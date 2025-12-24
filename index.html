@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Agenda Barbería</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body { font-family: Arial; background:#111; color:#fff; text-align:center }
+.container { max-width:400px; margin:auto }
+button { padding:10px; margin:5px; border:none; border-radius:6px }
+.disponible { background:#2ecc71 }
+.ocupado { background:#555; cursor:not-allowed }
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>Agenda tu cita 💈</h2>
+
+<input type="date" id="fecha"><br><br>
+<div id="horarios"></div><br>
+
+<input type="text" id="nombre" placeholder="Tu nombre"><br><br>
+<button onclick="agendar()">Confirmar cita</button>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD1NkGfQ7WHtu4KbqhdNsY3CkJlw_Vppp0",
+  authDomain: "barberia-d7c4e.firebaseapp.com",
+  projectId: "barberia-d7c4e",
+  storageBucket: "barberia-d7c4e.firebasestorage.app",
+  messagingSenderId: "216959587112",
+  appId: "1:216959587112:web:36ecdd4d8d0154a615f61d",
+  measurementId: "G-CSX435PRLD"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const HORAS = ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30"];
+
+let horaSeleccionada = "";
+
+document.getElementById("fecha").addEventListener("change", cargarHorarios);
+
+function cargarHorarios() {
+  const fecha = fecha.value;
+  horarios.innerHTML = "";
+
+  HORAS.forEach(h => {
+    db.collection("citas").doc(fecha+"_"+h).get().then(doc => {
+      const btn = document.createElement("button");
+      btn.textContent = h;
+
+      if (doc.exists) {
+        btn.className = "ocupado";
+        btn.disabled = true;
+      } else {
+        btn.className = "disponible";
+        btn.onclick = () => horaSeleccionada = h;
+      }
+      horarios.appendChild(btn);
+    });
+  });
+}
+
+function agendar() {
+  const nombre = document.getElementById("nombre").value;
+  const fecha = document.getElementById("fecha").value;
+
+  if (!nombre || !fecha || !horaSeleccionada) {
+    alert("Completa todos los datos");
+    return;
+  }
+
+  const id = fecha+"_"+horaSeleccionada;
+
+  db.collection("citas").doc(id).set({
+    nombre, fecha, hora: horaSeleccionada
+  }).then(() => {
+    window.open(`https://wa.me/521XXXXXXXXXX?text=Cita%20confirmada%20${fecha}%20${horaSeleccionada}`);
+  });
+}
+</script>
+</body>
+</html>
